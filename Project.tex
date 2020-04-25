@@ -66,5 +66,20 @@ Though NMF problems has a simple form, it has been proven that finding the exact
 
 All above three algorithms can only find local solution but not global optimal, due to the fact that the cost function $f = \frac{1}{2} \|A - WH\|_F^2$ is not convex in both variables $W$ and $H$ together. In addition, for the last two algorithms, we need to imply a "projection" step to ensure the non-negative property of $W$ and $H$, that is, to set all non-negative entries to 0 after each iteration step. Due to limitation of space, we are not going to extend our discussion into details on the algorithms. The presentation here is simply to provide some basic understanding on how to deal with the NMF problem. Of course, there exist more advanced and faster algorithms, and will we be learning to use too-kit \textit{scikit-learn} to solve the NMF problem in later sections. 
 \subsubsection{Application of NMF on Text Classification}
-As we have seen in previous sections, a collection of documents can be seen as a data matrix $A$ with document number as its rows, and 
+As we have seen in previous sections, a collection of documents can be represented a data matrix $A$, each column vector represents a document in word-frequency space. And we have learned how to classify it using singular value decomposition. In this section, we will learn to apply NMF in text classification, and compare the method of NMF with SVD. 
+
+The NMF problem for text classification can be expressed as the following: 
+\begin{quotation}
+	\noindent Given a collection of document represented by a data matrix $A \in R^{m\times n}$, find the non-negative matrix factorization
+	\begin{equation}
+	A_{m\times n} \approx W_{m\times k} H_{k\times n}
+	\end{equation}
+	that minimize the cost function in (1). In above equation, $k$ is a positive integer that $k \ll min(m, n)$. 
+\end{quotation}
+
+Remember that the non-negative matrix factorization can be written column by column, it leads to a natural interpretation for $W$ and $H$:
+\begin{quotation}
+	\noindent $W$ -- basis document matrix \\
+	$H$ -- weight matrix
+\end{quotation} 
 \end{document}
