@@ -33,5 +33,38 @@ Where $a_i$ is the i-th column vector of matrix $A$, and $h_i$ is the correspond
 
 Second property of NMF is that, negative entries are not allowed in $W$ and $H$. For this reason, NMF is intuitively a part-based representation, since the whole is formed by combining the parts. These two features make NMF a good method for text classification, we will discuss this with details in later sections. 
 \subsubsection{Basic Algorithms for Solving NMF Problems}
-Though NMF problems has a simple form, it has been proven that finding the exact solution of these problems in general is NP-hard. 
+Though NMF problems has a simple form, it has been proven that finding the exact solution of these problems in general is NP-hard. Nonetheless, it is possible to approximately solve the NMF problems using iterative measures. In this section, we will introduce three fundamental algorithms based on which other advanced algorithms are built. They are multiplicative update algorithm, gradient descent algorithm and alternating least squares algorithm. \\
+
+\noindent \textit{Multiplicative Update Algorithm for NMF:} 
+\begin{quotation}
+	\noindent $W = rank(m, k)$; initialize $W$ as random dense matrix \\
+	$H = rank(m, k)$; initialize $H$ as random dense matrix \\
+	for $i = 1 : maxiter$ \\
+	\indent $H_{ij} \leftarrow H_{ij} \frac{(W^TA)_{ij}}{(W^TWH)_{ij} + \epsilon}$ \\
+	\indent $W_{ij} \leftarrow W_{ij} \frac{(AH^T)_{ij}}{(WHH^T)_{ij} + \epsilon}$ \\
+	end
+\end{quotation}
+\noindent \textit{Basic Gradient Descent Algorithm for NMF:}
+\begin{quotation}
+	\noindent $W = rank(m, k)$; initialize $W$\\
+	$H = rank(m, k)$; initialize $H$\\
+	for $i = 1 : maxiter$ \\
+	\indent $H_{ij} \leftarrow H_{ij} - \epsilon_H\frac{\partial f}{\partial H}$ \\
+	\indent $W_{ij} \leftarrow W_{ij} - \epsilon_W\frac{\partial f}{\partial W}$ \\
+	end
+\end{quotation}
+\noindent \textit{Basic Alternative Least Squares (ALS) Algorithm for NMF:}
+\begin{quotation}
+	\noindent $W = rank(m, k)$; initialize $W$ as random dense matrix\\
+	for $i = 1 : maxiter$ \\
+	\indent (LS) \indent\indent\indent $H \leftarrow (W^TW)^{-1}W^TA$ \\
+	\indent (NONNEG) \indent Set all negative elements in $H$ to 0 \\
+	\indent (LS) \indent\indent\indent $W \leftarrow ((HH^T)^{-1}WA)^T$ \\
+	\indent (NONNEG) \indent Set all negative elements in $W$ to 0 \\
+	end
+\end{quotation}
+
+All above three algorithms can only find local solution but not global optimal, due to the fact that the cost function $f = \frac{1}{2} \|A - WH\|_F^2$ is not convex in both variables $W$ and $H$ together. In addition, for the last two algorithms, we need to imply a "projection" step to ensure the non-negative property of $W$ and $H$, that is, to set all non-negative entries to 0 after each iteration step. Due to limitation of space, we are not going to extend our discussion into details on the algorithms. The presentation here is simply to provide some basic understanding on how to deal with the NMF problem. Of course, there exist more advanced and faster algorithms, and will we be learning to use too-kit \textit{scikit-learn} to solve the NMF problem in later sections. 
+\subsubsection{Application of NMF on Text Classification}
+As we have seen in previous sections, a collection of documents can be seen as a data matrix $A$ with document number as its rows, and 
 \end{document}
