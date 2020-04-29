@@ -1,0 +1,724 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html>
+<head>
+	<meta http-equiv="content-type" content="text/html; charset=utf-8"/>
+	<title></title>
+	<meta name="generator" content="LibreOffice 6.0.7.3 (Linux)"/>
+	<meta name="created" content="00:00:00"/>
+	<meta name="changed" content="00:00:00"/>
+	<style type="text/css">
+		@page { margin-left: 0.88in; margin-right: 1in; margin-top: 1in; margin-bottom: 1in }
+		p { margin-bottom: 0.1in; line-height: 115% }
+	</style>
+</head>
+<body lang="en" dir="ltr">
+<p style="margin-bottom: 0in">Topic Modeling with Singular Value
+Decomposition and Non-negative Matrix Factorization</p>
+<p style="margin-bottom: 0in"><br/>
+
+</p>
+<p style="margin-bottom: 0in">Shu Xia &lt;sxia38@wisc.edu&gt;</p>
+<p style="margin-bottom: 0in">Ziqian Deng &lt;zdeng67@wisc.edu&gt;</p>
+<p style="margin-bottom: 0in"><br/>
+
+</p>
+<p style="margin-bottom: 0in">May 1, 2020</p>
+<p style="margin-bottom: 0in">ECE/CS/ME 532 Spring 2020</p>
+<p style="margin-bottom: 0in"><br/>
+
+</p>
+<p style="margin-bottom: 0in"><font size="4" style="font-size: 14pt"><b>1
+Abstract</b></font></p>
+<p style="margin-bottom: 0in">Natural Language Processing (NLP) is a
+rapidly advancing branch of unsupervised machine learning concerned
+with the ability of a computer to understand, analyze, manipulate,
+and potentially generate human language. Applications of NLP include
+Topic Modeling, where abstract &quot;topics&quot; that occur in a
+collection of documents need to be detected; Machine Translation,
+where text or speech are translated from one language to another;
+Sentiment Analysis, which allows businesses to identify customer
+sentiment toward products, brands or services in online conversations
+and feedback; Spam Filter, where unsolicited and unwanted email and
+messages are prevented from getting into user’ inbox, etc. 
+</p>
+<p style="margin-bottom: 0in"><br/>
+
+</p>
+<p style="margin-bottom: 0in">And just like in many other machine
+learning fields, matrix decomposition is one of the most important
+underlying methods in NLP. To help us start the study in NPL, this
+activity will introduce how to apply Singular Value Decomposition
+(SVD) and Non-negative Matrix Factorization (NMF) to conduct Topic
+Modeling on text data.</p>
+<p style="margin-bottom: 0in"><br/>
+
+</p>
+<p style="margin-bottom: 0in">1.1 Learning objectives</p>
+<ul>
+	<li/>
+<p style="margin-bottom: 0in">Have a knowledge of the wide
+	range of applications in NLP</p>
+	<li/>
+<p style="margin-bottom: 0in">Understand what is topic
+	modeling, and learn how to represent topic modeling problems using
+	matrix method.</p>
+	<li/>
+<p style="margin-bottom: 0in">Learn to conduct basic text
+	preprocessing (Tokenization, Stemming, Lemmatization, etc)</p>
+	<li/>
+<p style="margin-bottom: 0in">Refresh their knowledge in SVD
+	and apply SVD to topic modeling problems</p>
+</ul>
+<ul>
+	<li/>
+<p style="margin-bottom: 0in">Learn the Non-negative Matrix
+	Factorization (NMF) and apply NMF to topic modeling problems</p>
+</ul>
+<ul>
+	<li/>
+<p style="margin-bottom: 0in">Compare these two matrix
+	factorization techniques and explain the advantages of NMF</p>
+</ul>
+<p style="margin-bottom: 0in; page-break-before: always"><font size="4" style="font-size: 14pt"><b>2
+Background</b></font></p>
+<p style="margin-bottom: 0in"><br/>
+
+</p>
+<p style="margin-bottom: 0in"><font size="4" style="font-size: 14pt"><b>2.1
+What is a topic model</b></font></p>
+<p style="margin-bottom: 0in">A Topic Model can be defined as an
+unsupervised technique to discover topics across various text
+documents. These topics are abstract in nature, i.e., words which are
+related to each other form a topic. Similarly, there can be multiple
+topics in an individual document. For the time being, let’s
+understand a topic model as a black box, as illustrated in the below
+figure:</p>
+<p style="margin-bottom: 0in"><img src="Final%20Project%20Topic%20Modeling%20(1)_html_97ece056c34ddd25.png" name="image3.png" align="bottom" width="602" height="386" border="0"/>
+</p>
+<p style="margin-bottom: 0in">This black box (topic model) forms
+clusters of similar and related words which are called topics. These
+topics have a certain distribution in a document, and every topic is
+defined by the proportion of different words it contains.</p>
+<p style="margin-bottom: 0in"><br/>
+
+</p>
+<p style="margin-bottom: 0in"><br/>
+
+</p>
+<p style="margin-bottom: 0in; page-break-before: always"><font size="4" style="font-size: 14pt"><b>2.2
+Introduction to basic text preprocessing</b></font></p>
+<p style="margin-bottom: 0in"><br/>
+
+</p>
+<p style="margin-bottom: 0in"><font size="4" style="font-size: 14pt"><b>2.2.1
+Tokenization, Stemming, Lemmatization</b></font></p>
+<p style="margin-bottom: 0in">We will start by learning the basic
+text preprocessing techniques. Cleaning and preparation are crucial
+for many tasks, and NLP is no exception. Text preprocessing is
+usually the first step you’ll take when faced with an NLP task.
+Without preprocessing, our computer interprets &quot;the&quot;,
+&quot;The&quot;, and &quot;&lt;p&gt;The&quot; as entirely different
+words. There is a lot we can do here, depending on the formatting you
+need. Common tasks include:</p>
+<p style="margin-bottom: 0in"><br/>
+
+</p>
+<p style="margin-bottom: 0in">Noise removal — stripping text of
+formatting (e.g., HTML tags, stop words).</p>
+<p style="margin-bottom: 0in"><i><b>Tokenization </b></i>— breaking
+text into individual words.</p>
+<p style="margin-bottom: 0in">Normalization — cleaning text data in
+any other way:</p>
+<ul>
+	<li/>
+<p style="margin-bottom: 0in"><i><b>Stemming </b></i>is a
+	blunt axe to chop off word prefixes and suffixes. “booing” and
+	“booed” become “boo”, but “sing” may become “s” and
+	“sung” would remain “sung.”</p>
+	<li/>
+<p style="margin-bottom: 0in"><i><b>Lemmatization </b></i>is a
+	scalpel to bring words down to their root forms. For example, NLTK’s
+	savvy lemmatizer knows “am” and “are” are related to “be.”</p>
+</ul>
+<p style="margin-bottom: 0in"><br/>
+
+</p>
+<p style="margin-bottom: 0in">In Python, various packages will do
+most of the preprocessing tasks for us. Use the given code to try
+different methods to deal with text data.</p>
+<p style="margin-bottom: 0in"><br/>
+
+</p>
+<p style="margin-bottom: 0in"></p>
+<p style="margin-bottom: 0in"><br/>
+
+</p>
+<p style="margin-bottom: 0in"><b>Warm-up Question 1: </b>try
+lemmatizing and stemming the following collections of words:</p>
+<ul>
+	<li/>
+<p style="margin-top: 0.15in; margin-bottom: 0in; line-height: 100%; background: #ffffff">
+	<font size="2" style="font-size: 10pt">fly, flies, flying</font></p>
+	<li/>
+<p style="margin-bottom: 0in; line-height: 100%; background: #ffffff">
+	<font size="2" style="font-size: 10pt">organize, organizes,
+	organizing</font></p>
+	<li/>
+<p style="line-height: 100%; background: #ffffff"><font size="2" style="font-size: 10pt">universe,
+	university</font></p>
+</ul>
+<p style="margin-top: 0.15in; line-height: 100%; background: #ffffff">
+<font size="2" style="font-size: 10pt">Did you find anything
+interesting? Did the meaning of the individual word change a lot
+after lemmatization and stemming?</font></p>
+<p style="margin-top: 0.15in; line-height: 100%; background: #ffffff">
+</p>
+<p style="margin-top: 0.15in; line-height: 100%; background: #ffffff">
+<br/>
+<br/>
+
+</p>
+<p style="margin-bottom: 0in"><font size="4" style="font-size: 14pt"><b>2.2.2
+Represent text documents with matrix</b></font></p>
+<p style="margin-bottom: 0in"><font size="2" style="font-size: 10pt">Next,
+we will learn to use the term-document matrix to represent the text
+data. A document-term matrix or term-document matrix is a
+mathematical matrix that describes the frequency of terms that occur
+in a collection of documents. In a document-term matrix, rows
+correspond to documents in the collection and columns correspond to
+terms. For example:</font></p>
+<p style="margin-bottom: 0in"><br/>
+
+</p>
+<p style="margin-bottom: 0in"><font size="2" style="font-size: 10pt">Document
+1 = “ the cat sat on my face”</font></p>
+<p style="margin-bottom: 0in"><font size="2" style="font-size: 10pt">Document
+2 = “ the dog sat on my bed”</font></p>
+<p style="margin-bottom: 0in"><font size="2" style="font-size: 10pt">The
+simplest strategy is to create a vector of all possible words, and
+for each document count how many times each word appears. In this
+way, the mathematical matrix will be:</font></p>
+<p style="margin-bottom: 0in"><br/>
+
+</p>
+<table width="436" cellpadding="7" cellspacing="0">
+	<col width="81">
+	<col width="32">
+	<col width="26">
+	<col width="31">
+	<col width="32">
+	<col width="27">
+	<col width="25">
+	<col width="29">
+	<col width="25">
+	<tr valign="top">
+		<td width="81" style="border: 1.00pt solid #000000; padding: 0.07in">
+			<p align="center" style="border: none; padding: 0in; page-break-inside: auto; orphans: 0; widows: 0; page-break-after: auto">
+			<br/>
+
+			</p>
+		</td>
+		<td width="32" style="border: 1.00pt solid #000000; padding: 0.07in">
+			<p align="center" style="border: none; padding: 0in; page-break-inside: auto; orphans: 0; widows: 0; page-break-after: auto">
+			<font size="2" style="font-size: 10pt">bed</font></p>
+		</td>
+		<td width="26" style="border: 1.00pt solid #000000; padding: 0.07in">
+			<p align="center" style="border: none; padding: 0in; page-break-inside: auto; orphans: 0; widows: 0; page-break-after: auto">
+			<font size="2" style="font-size: 10pt">cat</font></p>
+		</td>
+		<td width="31" style="border: 1.00pt solid #000000; padding: 0.07in">
+			<p align="center" style="border: none; padding: 0in; page-break-inside: auto; orphans: 0; widows: 0; page-break-after: auto">
+			<font size="2" style="font-size: 10pt">dog</font></p>
+		</td>
+		<td width="32" style="border: 1.00pt solid #000000; padding: 0.07in">
+			<p align="center" style="border: none; padding: 0in; page-break-inside: auto; orphans: 0; widows: 0; page-break-after: auto">
+			<font size="2" style="font-size: 10pt">face</font></p>
+		</td>
+		<td width="27" style="border: 1.00pt solid #000000; padding: 0.07in">
+			<p align="center" style="border: none; padding: 0in; page-break-inside: auto; orphans: 0; widows: 0; page-break-after: auto">
+			<font size="2" style="font-size: 10pt">my</font></p>
+		</td>
+		<td width="25" style="border: 1.00pt solid #000000; padding: 0.07in">
+			<p align="center" style="border: none; padding: 0in; page-break-inside: auto; orphans: 0; widows: 0; page-break-after: auto">
+			<font size="2" style="font-size: 10pt">on</font></p>
+		</td>
+		<td width="29" style="border: 1.00pt solid #000000; padding: 0.07in">
+			<p align="center" style="border: none; padding: 0in; page-break-inside: auto; orphans: 0; widows: 0; page-break-after: auto">
+			<font size="2" style="font-size: 10pt">sat</font></p>
+		</td>
+		<td width="25" style="border: 1.00pt solid #000000; padding: 0.07in">
+			<p align="center" style="border: none; padding: 0in; page-break-inside: auto; orphans: 0; widows: 0; page-break-after: auto">
+			<font size="2" style="font-size: 10pt">the</font></p>
+		</td>
+	</tr>
+	<tr valign="top">
+		<td width="81" style="border: 1.00pt solid #000000; padding: 0.07in">
+			<p align="center" style="border: none; padding: 0in; page-break-inside: auto; orphans: 0; widows: 0; page-break-after: auto">
+			<font size="2" style="font-size: 10pt">Document 1</font></p>
+		</td>
+		<td width="32" style="border: 1.00pt solid #000000; padding: 0.07in">
+			<p align="center" style="border: none; padding: 0in; page-break-inside: auto; orphans: 0; widows: 0; page-break-after: auto">
+			<font size="2" style="font-size: 10pt">0</font></p>
+		</td>
+		<td width="26" style="border: 1.00pt solid #000000; padding: 0.07in">
+			<p align="center" style="border: none; padding: 0in; page-break-inside: auto; orphans: 0; widows: 0; page-break-after: auto">
+			<font size="2" style="font-size: 10pt">1</font></p>
+		</td>
+		<td width="31" style="border: 1.00pt solid #000000; padding: 0.07in">
+			<p align="center" style="border: none; padding: 0in; page-break-inside: auto; orphans: 0; widows: 0; page-break-after: auto">
+			<font size="2" style="font-size: 10pt">0</font></p>
+		</td>
+		<td width="32" style="border: 1.00pt solid #000000; padding: 0.07in">
+			<p align="center" style="border: none; padding: 0in; page-break-inside: auto; orphans: 0; widows: 0; page-break-after: auto">
+			<font size="2" style="font-size: 10pt">1</font></p>
+		</td>
+		<td width="27" style="border: 1.00pt solid #000000; padding: 0.07in">
+			<p align="center" style="border: none; padding: 0in; page-break-inside: auto; orphans: 0; widows: 0; page-break-after: auto">
+			<font size="2" style="font-size: 10pt">1</font></p>
+		</td>
+		<td width="25" style="border: 1.00pt solid #000000; padding: 0.07in">
+			<p align="center" style="border: none; padding: 0in; page-break-inside: auto; orphans: 0; widows: 0; page-break-after: auto">
+			<font size="2" style="font-size: 10pt">1</font></p>
+		</td>
+		<td width="29" style="border: 1.00pt solid #000000; padding: 0.07in">
+			<p align="center" style="border: none; padding: 0in; page-break-inside: auto; orphans: 0; widows: 0; page-break-after: auto">
+			<font size="2" style="font-size: 10pt">1</font></p>
+		</td>
+		<td width="25" style="border: 1.00pt solid #000000; padding: 0.07in">
+			<p align="center" style="border: none; padding: 0in; page-break-inside: auto; orphans: 0; widows: 0; page-break-after: auto">
+			<font size="2" style="font-size: 10pt">1</font></p>
+		</td>
+	</tr>
+	<tr valign="top">
+		<td width="81" style="border: 1.00pt solid #000000; padding: 0.07in">
+			<p align="center" style="border: none; padding: 0in; page-break-inside: auto; orphans: 0; widows: 0; page-break-after: auto">
+			<font size="2" style="font-size: 10pt">Document 2</font></p>
+		</td>
+		<td width="32" style="border: 1.00pt solid #000000; padding: 0.07in">
+			<p align="center" style="border: none; padding: 0in; page-break-inside: auto; orphans: 0; widows: 0; page-break-after: auto">
+			<font size="2" style="font-size: 10pt">1</font></p>
+		</td>
+		<td width="26" style="border: 1.00pt solid #000000; padding: 0.07in">
+			<p align="center" style="border: none; padding: 0in; page-break-inside: auto; orphans: 0; widows: 0; page-break-after: auto">
+			<font size="2" style="font-size: 10pt">0</font></p>
+		</td>
+		<td width="31" style="border: 1.00pt solid #000000; padding: 0.07in">
+			<p align="center" style="border: none; padding: 0in; page-break-inside: auto; orphans: 0; widows: 0; page-break-after: auto">
+			<font size="2" style="font-size: 10pt">1</font></p>
+		</td>
+		<td width="32" style="border: 1.00pt solid #000000; padding: 0.07in">
+			<p align="center" style="border: none; padding: 0in; page-break-inside: auto; orphans: 0; widows: 0; page-break-after: auto">
+			<font size="2" style="font-size: 10pt">0</font></p>
+		</td>
+		<td width="27" style="border: 1.00pt solid #000000; padding: 0.07in">
+			<p align="center" style="border: none; padding: 0in; page-break-inside: auto; orphans: 0; widows: 0; page-break-after: auto">
+			<font size="2" style="font-size: 10pt">1</font></p>
+		</td>
+		<td width="25" style="border: 1.00pt solid #000000; padding: 0.07in">
+			<p align="center" style="border: none; padding: 0in; page-break-inside: auto; orphans: 0; widows: 0; page-break-after: auto">
+			<font size="2" style="font-size: 10pt">1</font></p>
+		</td>
+		<td width="29" style="border: 1.00pt solid #000000; padding: 0.07in">
+			<p align="center" style="border: none; padding: 0in; page-break-inside: auto; orphans: 0; widows: 0; page-break-after: auto">
+			<font size="2" style="font-size: 10pt">1</font></p>
+		</td>
+		<td width="25" style="border: 1.00pt solid #000000; padding: 0.07in">
+			<p align="center" style="border: none; padding: 0in; page-break-inside: auto; orphans: 0; widows: 0; page-break-after: auto">
+			<font size="2" style="font-size: 10pt">1</font></p>
+		</td>
+	</tr>
+</table>
+<p style="margin-bottom: 0in"> 
+</p>
+<p style="margin-bottom: 0in"><br/>
+
+</p>
+<p style="margin-bottom: 0in"><font size="2" style="font-size: 10pt">The
+problem with this counting strategy is that we use a lot of words
+commonly, that just don’t mean much. In fact, the most commonly
+used word in English “the” makes up 7% of the words we speak,
+which is double the frequency of the next most popular word “of”.
+So, if we construct our document matrix out of counts, then we end up
+with numbers that don’t contain much information, unless our goal
+is to see who uses “the” most often.</font></p>
+<p style="margin-bottom: 0in"><br/>
+
+</p>
+<p style="margin-bottom: 0in"><font size="2" style="font-size: 10pt">Rather
+than just counting, a technique in NLP known as </font><font size="2" style="font-size: 10pt"><i><b>term
+frequency-inverse document frequency (tf-idf)</b></i></font><font size="2" style="font-size: 10pt">
+is better. TF-IDF score of a word is a </font><font color="#222222"><font size="2" style="font-size: 10pt">numerical
+statistic for ranking its importance by </font></font><font size="2" style="font-size: 10pt">deprioritizing
+the most common words and prioritizing less frequently used terms as
+topics. </font>
+</p>
+<p style="margin-bottom: 0in"><br/>
+
+</p>
+<p style="margin-bottom: 0in"><font size="2" style="font-size: 10pt">The
+TF-IDF score of word, </font><font size="2" style="font-size: 10pt"><i>w</i></font><font size="2" style="font-size: 10pt">,
+is:</font></p>
+<p style="margin-bottom: 0in"><br/>
+
+</p>
+<p style="margin-bottom: 0in"><font size="2" style="font-size: 10pt">				</font><img src="Final%20Project%20Topic%20Modeling%20(1)_html_3be235b025b10e85.gif" align="absmiddle"/>
+</p>
+<p style="margin-bottom: 0in">Where 
+</p>
+<p style="margin-bottom: 0in"><br/>
+
+</p>
+<p style="margin-left: 1in; margin-bottom: 0in"><img src="Final%20Project%20Topic%20Modeling%20(1)_html_e21bb258385f75cf.gif" align="absmiddle"/>
+
+</p>
+<p style="margin-left: 1in; margin-bottom: 0in"><br/>
+
+</p>
+<p style="margin-left: 1in; margin-bottom: 0in"><img src="Final%20Project%20Topic%20Modeling%20(1)_html_9ec435770c5e84b4.gif" align="absmiddle"/>
+<font size="5" style="font-size: 18pt">)</font></p>
+<p style="margin-bottom: 0in"><br/>
+
+</p>
+<p style="margin-bottom: 0in">If we use the TF-IDF for the previous
+example, the matrix will become:</p>
+<p style="margin-bottom: 0in"><br/>
+
+</p>
+<table width="579" cellpadding="7" cellspacing="0">
+	<col width="81">
+	<col width="73">
+	<col width="68">
+	<col width="61">
+	<col width="50">
+	<col width="33">
+	<col width="23">
+	<col width="25">
+	<col width="37">
+	<tr valign="top">
+		<td width="81" style="border: 1.00pt solid #000000; padding: 0.07in">
+			<p align="center" style="orphans: 0; widows: 0"><br/>
+
+			</p>
+		</td>
+		<td width="73" style="border: 1.00pt solid #000000; padding: 0.07in">
+			<p align="center" style="orphans: 0; widows: 0"><font size="2" style="font-size: 10pt">bed</font></p>
+		</td>
+		<td width="68" style="border: 1.00pt solid #000000; padding: 0.07in">
+			<p align="center" style="orphans: 0; widows: 0"><font size="2" style="font-size: 10pt">cat</font></p>
+		</td>
+		<td width="61" style="border: 1.00pt solid #000000; padding: 0.07in">
+			<p align="center" style="orphans: 0; widows: 0"><font size="2" style="font-size: 10pt">dog</font></p>
+		</td>
+		<td width="50" style="border: 1.00pt solid #000000; padding: 0.07in">
+			<p align="center" style="orphans: 0; widows: 0"><font size="2" style="font-size: 10pt">face</font></p>
+		</td>
+		<td width="33" style="border: 1.00pt solid #000000; padding: 0.07in">
+			<p align="center" style="orphans: 0; widows: 0"><font size="2" style="font-size: 10pt">my</font></p>
+		</td>
+		<td width="23" style="border: 1.00pt solid #000000; padding: 0.07in">
+			<p align="center" style="orphans: 0; widows: 0"><font size="2" style="font-size: 10pt">on</font></p>
+		</td>
+		<td width="25" style="border: 1.00pt solid #000000; padding: 0.07in">
+			<p align="center" style="orphans: 0; widows: 0"><font size="2" style="font-size: 10pt">sat</font></p>
+		</td>
+		<td width="37" style="border: 1.00pt solid #000000; padding: 0.07in">
+			<p align="center" style="orphans: 0; widows: 0"><font size="2" style="font-size: 10pt">the</font></p>
+		</td>
+	</tr>
+	<tr valign="top">
+		<td width="81" style="border: 1.00pt solid #000000; padding: 0.07in">
+			<p align="center" style="orphans: 0; widows: 0"><font size="2" style="font-size: 10pt">Document
+			1</font></p>
+		</td>
+		<td width="73" style="border: 1.00pt solid #000000; padding: 0.07in">
+			<p align="center" style="orphans: 0; widows: 0"><font size="2" style="font-size: 10pt">0</font></p>
+		</td>
+		<td width="68" style="border: 1.00pt solid #000000; padding: 0.07in">
+			<p align="center" style="orphans: 0; widows: 0"><font size="2" style="font-size: 10pt">0.115525</font></p>
+		</td>
+		<td width="61" style="border: 1.00pt solid #000000; padding: 0.07in">
+			<p align="center" style="orphans: 0; widows: 0"><font size="2" style="font-size: 10pt">0</font></p>
+		</td>
+		<td width="50" style="border: 1.00pt solid #000000; padding: 0.07in">
+			<p align="center" style="orphans: 0; widows: 0"><font size="2" style="font-size: 10pt">115525</font></p>
+		</td>
+		<td width="33" style="border: 1.00pt solid #000000; padding: 0.07in">
+			<p align="center" style="orphans: 0; widows: 0"><font size="2" style="font-size: 10pt">0</font></p>
+		</td>
+		<td width="23" style="border: 1.00pt solid #000000; padding: 0.07in">
+			<p align="center" style="orphans: 0; widows: 0"><font size="2" style="font-size: 10pt">0</font></p>
+		</td>
+		<td width="25" style="border: 1.00pt solid #000000; padding: 0.07in">
+			<p align="center" style="orphans: 0; widows: 0"><font size="2" style="font-size: 10pt">0</font></p>
+		</td>
+		<td width="37" style="border: 1.00pt solid #000000; padding: 0.07in">
+			<p align="center" style="orphans: 0; widows: 0"><font size="2" style="font-size: 10pt">0</font></p>
+		</td>
+	</tr>
+	<tr valign="top">
+		<td width="81" style="border: 1.00pt solid #000000; padding: 0.07in">
+			<p align="center" style="orphans: 0; widows: 0"><font size="2" style="font-size: 10pt">Document
+			2</font></p>
+		</td>
+		<td width="73" style="border: 1.00pt solid #000000; padding: 0.07in">
+			<p align="center" style="orphans: 0; widows: 0"><font size="2" style="font-size: 10pt">0.115525</font></p>
+		</td>
+		<td width="68" style="border: 1.00pt solid #000000; padding: 0.07in">
+			<p align="center" style="orphans: 0; widows: 0"><font size="2" style="font-size: 10pt">0</font></p>
+		</td>
+		<td width="61" style="border: 1.00pt solid #000000; padding: 0.07in">
+			<p align="center" style="orphans: 0; widows: 0"><font size="2" style="font-size: 10pt">0.115525</font></p>
+		</td>
+		<td width="50" style="border: 1.00pt solid #000000; padding: 0.07in">
+			<p align="center" style="orphans: 0; widows: 0"><font size="2" style="font-size: 10pt">0</font></p>
+		</td>
+		<td width="33" style="border: 1.00pt solid #000000; padding: 0.07in">
+			<p align="center" style="orphans: 0; widows: 0"><font size="2" style="font-size: 10pt">0</font></p>
+		</td>
+		<td width="23" style="border: 1.00pt solid #000000; padding: 0.07in">
+			<p align="center" style="orphans: 0; widows: 0"><font size="2" style="font-size: 10pt">0</font></p>
+		</td>
+		<td width="25" style="border: 1.00pt solid #000000; padding: 0.07in">
+			<p align="center" style="orphans: 0; widows: 0"><font size="2" style="font-size: 10pt">0</font></p>
+		</td>
+		<td width="37" style="border: 1.00pt solid #000000; padding: 0.07in">
+			<p align="center" style="orphans: 0; widows: 0"><font size="2" style="font-size: 10pt">0</font></p>
+		</td>
+	</tr>
+</table>
+<p style="margin-bottom: 0in"><br/>
+
+</p>
+<p style="margin-bottom: 0in">Compared with the previous matrix, this
+new matrix only gave scores to meaningful words such as “cat” and
+“face” for document 1 and “bed” and “dog” for document 2,
+while it gave 0 to those less important words appearing commonly and
+equally in both documents. Therefore, this matrix is easier for human
+and machine to interpret.</p>
+<p style="margin-bottom: 0in"></p>
+<p style="margin-bottom: 0in"><br/>
+
+</p>
+<p style="margin-bottom: 0in"><b>Warm-up Question 2: </b>try
+different strategies to count words in three of Donald Trump’s
+tweets and turn them into a matrix.</p>
+<ol>
+	<li/>
+<p style="margin-top: 0.15in; margin-bottom: 0in; line-height: 100%; background: #ffffff">
+	<font size="2" style="font-size: 10pt">Use the simple counting
+	strategy first</font></p>
+	<li/>
+<p style="line-height: 100%; background: #ffffff"><font size="2" style="font-size: 10pt">Then
+	complete the line of code that is unfinished and  try the TF-IDF
+	strategy</font></p>
+</ol>
+<p style="margin-top: 0.15in; line-height: 100%; background: #ffffff">
+</p>
+<p style="margin-bottom: 0in"><br/>
+
+</p>
+<p style="margin-left: 1in; text-indent: 0.5in; margin-bottom: 0in"><img src="Final%20Project%20Topic%20Modeling%20(1)_html_49328ccc379451e3.gif" align="absmiddle"/>
+</p>
+<p style="margin-bottom: 0in"><br/>
+
+</p>
+<p style="margin-bottom: 0in"><br/>
+
+</p>
+<p style="margin-bottom: 0in"><br/>
+
+</p>
+<p style="margin-bottom: 0in; page-break-before: always"><font size="4" style="font-size: 14pt"><b>2.3
+Singular Value Decomposition and Latent Semantic Analysis</b></font></p>
+<p style="margin-bottom: 0in">Now we will dive into using Singular
+Value Decomposition (SVD) to address Topic Modeling. Sometimes we
+hear topic modeling as <i><b>Latent Semantic Analysis (LSA)</b></i><i>
+</i>which is an algorithm that leverages SVD to produce a set of
+concepts related to the documents and terms. 
+</p>
+<p style="margin-bottom: 0in"><br/>
+
+</p>
+<p style="margin-bottom: 0in"><font size="4" style="font-size: 14pt"><b>2.3.1
+Overview of Latent Semantic Analysis</b></font></p>
+<p style="margin-bottom: 0in">All languages have their own
+intricacies and nuances which are quite difficult for a machine to
+capture (sometimes they’re even misunderstood by us humans!). This
+can include different words that mean the same thing, and also the
+words which have the same spelling but different meanings.</p>
+<p style="margin-bottom: 0in"><br/>
+
+</p>
+<p style="margin-bottom: 0in">For example, consider the following two
+sentences:</p>
+<p style="margin-bottom: 0in"><br/>
+
+</p>
+<ol>
+	<li/>
+<p style="margin-bottom: 0in">I liked his last novel quite a
+	lot.</p>
+	<li/>
+<p style="margin-bottom: 0in">We would like to go for a novel
+	marketing campaign.</p>
+</ol>
+<p style="margin-bottom: 0in"><br/>
+
+</p>
+<p style="margin-bottom: 0in">In the first sentence, the word ‘novel’
+refers to a book, and in the second sentence it means new or fresh.</p>
+<p style="margin-bottom: 0in"><br/>
+
+</p>
+<p style="margin-bottom: 0in">We can easily distinguish between these
+words because we are able to understand the context behind these
+words. However, a machine would not be able to capture this concept
+as it cannot understand the context in which the words have been
+used. This is where Latent Semantic Analysis (LSA) comes into play as
+it attempts to leverage the context around the words to capture the
+hidden concepts, also known as topics.</p>
+<p style="margin-bottom: 0in"><br/>
+
+</p>
+<p style="margin-bottom: 0in">So, simply mapping words to documents
+won’t really help. What we really need is to figure out the hidden
+concepts or topics behind the words. LSA is one such technique that
+can find these hidden topics. Let’s now deep dive into the inner
+workings of LSA.</p>
+<p style="margin-bottom: 0in"><br/>
+
+</p>
+<p style="margin-bottom: 0in"><font size="4" style="font-size: 14pt"><b>2.3.2
+Singular Value Decomposition in Latent Semantic Analysis</b></font></p>
+<p style="margin-bottom: 0in">Let’s say we have <i>m</i> number of
+text documents with <i>n</i> number of total unique terms (words). We
+wish to extract <i>k</i> topics from all the text data in the
+documents. The number of topics, k, has to be specified by the user.
+Here are the steps to conduct the LSA:</p>
+<p style="margin-bottom: 0in"><br/>
+
+</p>
+<ul>
+	<li/>
+<p style="margin-bottom: 0in">Generate a document-term matrix
+	of shape m x n having TF-IDF scores.</p>
+</ul>
+<p align="center" style="margin-left: 0.5in; margin-bottom: 0in"><img src="Final%20Project%20Topic%20Modeling%20(1)_html_33de2aa2ea302a6b.png" name="image1.png" align="bottom" width="327" height="132" border="0"/>
+</p>
+<ul>
+	<li/>
+<p style="margin-bottom: 0in">Then, we will reduce the
+	dimensions of the above matrix to <i>k</i> (number of desired
+	topics) dimensions, using SVD.</p>
+</ul>
+<p style="margin-bottom: 0in"><br/>
+
+</p>
+<p style="margin-bottom: 0in">We have learned SVD. A 
+<img src="Final%20Project%20Topic%20Modeling%20(1)_html_1858e06d118770db.gif" align="absmiddle"/>
+matrix
+A with rank r 
+<img src="Final%20Project%20Topic%20Modeling%20(1)_html_627b070f37711167.gif" align="absmiddle"/>
+
+<img src="Final%20Project%20Topic%20Modeling%20(1)_html_c795b389a9f39bd4.gif" align="absmiddle"/>
+has
+a SVD of the form:</p>
+<p align="left" style="margin-bottom: 0in">			</p>
+<p align="left" style="margin-bottom: 0in"><font size="5" style="font-size: 18pt">			</font><img src="Final%20Project%20Topic%20Modeling%20(1)_html_cfad8802c8a1b75.gif" align="absmiddle"/>
+
+</p>
+<p align="left" style="margin-bottom: 0in"><br/>
+
+</p>
+<p align="left" style="margin-bottom: 0in">where U is a 
+<img src="Final%20Project%20Topic%20Modeling%20(1)_html_a021ffa4c88817d5.gif" align="absmiddle"/>
+matrix
+with orthonormal columns, V is a 
+<img src="Final%20Project%20Topic%20Modeling%20(1)_html_c9b5a26aac33c5c3.gif" align="absmiddle"/>
+
+matrix with orthonormal columns, and S is an 
+<img src="Final%20Project%20Topic%20Modeling%20(1)_html_caf2b53044acd8fd.gif" align="absmiddle"/>
+
+diagonal matrix with the entries sorted in decreasing order. The
+entries of the S matrix are the singular values, and the U and V
+matrices are the left and right singular vectors, corresponding to
+term and document vectors. This is simply a re-representation of the
+A matrix using orthogonal indexing dimensions.</p>
+<p align="left" style="margin-bottom: 0in"><img src="Final%20Project%20Topic%20Modeling%20(1)_html_ec5f804131edb1d1.png" name="image2.png" align="bottom" width="636" height="201" border="0"/>
+</p>
+<p align="left" style="margin-bottom: 0in"><br/>
+
+</p>
+<p align="left" style="margin-bottom: 0in">Specifically, LSA uses the
+truncated SVD, in which the k largest singular values are retained,
+and the remainder set to 0. The resulting representation is the best
+k-dimensional approximation to the original matrix in the
+least-squares sense. Each document and term is now represented as a
+k-dimensional vector in the space derived by the SVD.. 
+</p>
+<p align="left" style="margin-bottom: 0in"><br/>
+
+</p>
+<p style="margin-bottom: 0in"></p>
+<p style="margin-bottom: 0in"><br/>
+
+</p>
+<p style="margin-bottom: 0in"><b>Warm-up Question 3: </b>In the
+previous question, we define our own functions to compute the TF-IDF
+scores, but actually, Python has various packages such as
+scikit-learn that can help us compute the TF-IDF quickly. Please
+follow the provided code and learn to conduct LSA with SVD on a text
+data <i>raw_forum_posts.dat </i>which contains posts from a data
+science forum.</p>
+<ul>
+	<li/>
+<p style="margin-top: 0.15in; line-height: 100%; background: #ffffff">
+	<font size="2" style="font-size: 10pt">After printing out the topics
+	and their related terms, could you summarize the topics using your
+	own words? Try to use a sentence or a phrase to summarize topic 3, 4
+	and 5. For example, the topic 0 could be summed up as “using big
+	data”.   </font>
+	</p>
+</ul>
+<p style="margin-top: 0.15in; line-height: 100%; background: #ffffff">
+</p>
+<p style="margin-bottom: 0in"><br/>
+
+</p>
+<p style="margin-bottom: 0in"><font size="4" style="font-size: 14pt"><b>2.4
+Non-negative Matrix Factorization</b></font></p>
+<p style="margin-bottom: 0in; page-break-before: always"><font size="4" style="font-size: 14pt"><b>3
+Main Activity</b></font></p>
+<p style="margin-bottom: 0in; page-break-before: always"><font size="4" style="font-size: 14pt"><b>4
+References</b></font></p>
+<p style="margin-bottom: 0in"><br/>
+
+</p>
+<p style="margin-bottom: 0in; page-break-before: always"><font size="4" style="font-size: 14pt"><b>5
+Appendix</b></font></p>
+<p style="margin-bottom: 0in"><br/>
+
+</p>
+<p style="margin-bottom: 0in"><br/>
+
+</p>
+<p style="margin-bottom: 0in"><br/>
+
+</p>
+<p style="margin-bottom: 0in"><br/>
+
+</p>
+<p style="margin-bottom: 0in"><br/>
+
+</p>
+<p style="margin-bottom: 0in"><br/>
+
+</p>
+<p style="margin-bottom: 0in"><br/>
+
+</p>
+<p style="margin-bottom: 0in"><br/>
+
+</p>
+</body>
+</html>
