@@ -82,6 +82,13 @@ Remember that the non-negative matrix factorization can be written column by col
 	\noindent $W$ -- basis document matrix \\
 	$H$ -- weight matrix
 \end{quotation}
+
+To finish up this section, we will briefly compare NMF and SVD in topic modeling problems. 
+\begin{itemize}
+	\item Both SVD and NMF can be used to solve text classification problems. The interpretation of decomposed matrices as result are similar. 
+	\item NMF only allows non-negative entries, which leads to the interpretation that it uses parts to represent the whole. While SVD gives a more "deeper" factorization basing on the structural features of the entire data set. 
+	\item The solution to SVD is unique; while the solution to NMF is not. Since topic modeling problems are often presented as un-supervised learning problems, one might need to try different rank approximations (different $k$) using NMF. 
+\end{itemize}
 \subsubsection{Warm-Up Questions}
 1. Prove that NMF is non-unique. \\
 (Hint: Insert matrix ($BB^{-1}$) between $W$ and $H$.) \\
